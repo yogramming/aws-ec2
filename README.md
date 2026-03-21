@@ -1,4 +1,4 @@
-# Terraform + Ansible AWS EC2 Infrastructure
+# Terraform + Ansible AWS EC2 Infrastructure - by yogramming
 
 This project provisions an AWS EC2 instance using Terraform and configures it using Ansible. It uses S3 for remote state storage and DynamoDB for state locking.
 
