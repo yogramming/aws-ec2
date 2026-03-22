@@ -78,8 +78,6 @@ resource "aws_dynamodb_table" "terraform_lock" {
   }
 }
 
-
-
 # ----------------------------------------------------------------------------------
 # Add the ec2 instance (after shifting the state file to remote backend)
 # ----------------------------------------------------------------------------------
@@ -87,8 +85,49 @@ resource "aws_dynamodb_table" "terraform_lock" {
 resource "aws_instance" "web" {
   ami           = "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
   instance_type = "t3.micro"
+  key_name      = aws_key_pair.deployer.key_name
+
+  vpc_security_group_ids = [aws_security_group.allow_ssh_http.id]
 
   tags = {
     Name = "terraform-ec2"
   }
 }
+
+resource "aws_key_pair" "deployer" {
+  key_name   = "my-key-2"
+  public_key = file("/home/yogramming/.ssh/id_ed25519.pub")
+}
+
+# -----------------------------------------------------------------------------------
+# Allow SSH and HTTP in the ec2 instance
+# -----------------------------------------------------------------------------------
+
+resource "aws_security_group" "allow_ssh_http" {
+  name        = "allow_ssh_http"
+  description = "Allow SSH and HTTP"
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # for now (later restrict to your IP)
+  }
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
